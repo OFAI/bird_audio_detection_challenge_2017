@@ -20,4 +20,4 @@ WORKPATH="/media/audiostreams/data/bird-challenge/results/full_sr/"
 NETWORK=final_submission
 
 # email for notification on finished subtasks (if email address is given)
-EMAIL=
+EMAIL=thomas.grill@ofai.at
