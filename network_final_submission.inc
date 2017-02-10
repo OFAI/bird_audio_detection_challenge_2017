@@ -11,7 +11,7 @@ net_width=1000
 cnvmult=16
 nl=leaky_rectify
 # augmentation
-featpart="augment:Rotation|augment:Shift(low=-1,high=1,axis=3)"
+featpart="augment:Rotation"
 # normalization
 normpart="normalize:BatchNorm(axes=0x1x2,alpha=0.1,beta=None,gamma=None)"  # normalize over all except frequency axis
 # convolutional layers

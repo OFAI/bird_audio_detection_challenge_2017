@@ -14,11 +14,10 @@ TRAIN="ff1010bird warblrb10k"
 TEST=testdata
 
 # where to put work data (must be writable)
-WORKPATH="/tmp/bird_workspace/"
-WORKPATH="/media/audiostreams/data/bird-challenge/results/master/"
+WORKPATH="/media/audiostreams/data/bird-challenge/results/no_aug_shift"
 
 # network configuration to use (network_$NETWORK.inc file)
 NETWORK=final_submission
 
 # email for notification on finished subtasks (if email address is given)
-EMAIL=
+EMAIL=thomas.grill@ofai.at
