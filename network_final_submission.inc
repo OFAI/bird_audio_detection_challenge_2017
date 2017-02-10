@@ -22,10 +22,10 @@ densepart="Dropout(p=0.5)|Dense(256)|${nl}|Dropout(p=0.5)|Dense(32)|${nl}|Dropou
 net_layers="${featpart}|${normpart}|${convpart}|${densepart}"
 
 # training options
-net_options="--var updates=adam --var batchsize=64 --var epochsize=1500 --var learning_rate_mode=adaptive --var learning_rate=0.001 --var learning_rate_stop=0.00001"
+net_options="--problem binary --var updates=adam --var batchsize=64 --var epochsize=1500 --var measures=auroc --var epochsize_val=500 --var learning_rate_mode=adaptive --var learning_rate=0.001 --var learning_rate_stop=0.00001"
 
 
 # number of folds for pseudo-labeling
-pseudo_folds=2
+pseudo_folds=1
 # confidence threshold for pseudo-labeling
-pseudo_threshold=0.1
+pseudo_threshold=0.05
