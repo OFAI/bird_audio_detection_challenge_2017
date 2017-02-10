@@ -28,4 +28,4 @@ net_options="--problem binary --var updates=adam --var batchsize=64 --var epochs
 # number of folds for pseudo-labeling
 pseudo_folds=1
 # confidence threshold for pseudo-labeling
-pseudo_threshold=0.05
+pseudo_threshold=0.01
