@@ -63,15 +63,13 @@ function train_model {
 
     "$here/code/simplenn_main.py" \
     --mode=train \
-    --problem=binary \
-    --var measures= \
     --inputs filelist:filelist \
     --var filelist:path="$LISTPATH" \
     --var filelist:lists="${filelists}" \
     --var filelist:sep=',' \
     --var filelist:column=0 \
     --process "filelistshuffle:shuffle(seed=$seed,memory=25000)" \
-    --process "input:${here}/code/load_data.py(type=spect,downmix=0,cycle=0,denoise=1,width=${net_width},seed=$seed)" \
+    --process "input:${here}/code/load_data.py(type=spect,downmix=0,cycle=0,denoise=1,width=${net_width},seed=$seed,cut_stddevs=2.5)" \
     --var input:labels="${LABELPATH}"/'*.csv',"${extralabels}" \
     --var input:data="${SPECTPATH}/%(id)s.h5" \
     --var input:data_vars=1k \
@@ -152,7 +150,7 @@ function stage1_train {
         model="$WORKPATH/model_first_${i}"
         if [ ! -f "${model}.h5" ]; then # check for existence
             echo_status "Training model ${model}."
-            train_model "${model}" "train_${i}" '' ${i} ${cmdargs} || return $?
+            train_model "${model}" "train_${i},val_${i}" '' ${i} ${cmdargs} || return $?
             echo_status "Done training model ${model}."
         else
             echo_status "Using existing model ${model}."
@@ -235,7 +233,7 @@ function stage2_train {
             model="$WORKPATH/model_second_${i}_${h}"
             if [ ! -f "${model}.h5" ]; then # check for existence
                 echo_status "Training model ${model}."
-                train_model "${model}" "train_${i}_pseudo_${h}" "$LISTPATH/testdata.pseudo_*" ${i} ${cmdargs} || return $?
+                train_model "${model}" "train_${i}_pseudo_${h},val_${i}" "$LISTPATH/testdata.pseudo_*" ${i} ${cmdargs} || return $?
                 echo_status "Done training model ${model}."
             else
                 echo_status "Using existing model ${model}."
