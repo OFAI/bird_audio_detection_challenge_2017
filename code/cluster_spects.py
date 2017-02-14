@@ -39,7 +39,7 @@ if __name__ == '__main__':
         measures = {}
         for path in args.spectpaths:
             for fn in glob(path):
-                print "Reading", fn
+#                print "Reading", fn
                 path, item = fn.strip().split('/')[-2:]
                 item = os.path.splitext(item)[0]
                 with h5py.File(fn, 'r') as specf:

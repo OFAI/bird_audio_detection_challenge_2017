@@ -129,7 +129,7 @@ function stage1_prepare {
         echo_status "Computing training data clusters."
         datasets=${TRAIN// /,}
         dataspects=`for t in $TRAIN; do echo "${SPECTPATH}"/$t/'*.wav.h5'; done`
-        "$here/code/cluster_spects.py" "${dataspects}" --datasets ${datasets} --skipframes=35 --pca=0.95 --clusters=${TRAIN_CLUSTERS} --outfile "${clusterfile}"
+        "$here/code/cluster_spects.py" ${dataspects} --datasets ${datasets} --skipframes=35 --pca=0.95 --clusters=${TRAIN_CLUSTERS} --outfile "${clusterfile}"
     else
         echo_status "Using existing predictions ${clusterfile}."
     fi
@@ -139,7 +139,7 @@ function stage1_prepare {
         echo_status "Computing testing data clusters."
         datasets=${TEST// /,}
         dataspects=`for t in $TEST; do echo "${SPECTPATH}"/$t/'*.wav.h5'; done`
-        "$here/code/cluster_spects.py" "${dataspects}" --datasets ${datasets} --skipframes=35 --pca=0.95 --clusters=${TEST_CLUSTERS} --outfile "${clusterfile}"
+        "$here/code/cluster_spects.py" ${dataspects} --datasets ${datasets} --skipframes=35 --pca=0.95 --clusters=${TEST_CLUSTERS} --outfile "${clusterfile}"
     else
         echo_status "Using existing predictions ${clusterfile}."
     fi
