@@ -56,8 +56,9 @@ function train_model {
     model="$1"  # model including path
     filelists="$2"  # file list to use
     extralabels="$3"
-    seed="$4"
-    cmdargs="${@:5}"
+    cluster="$4"
+    seed="$5"
+    cmdargs="${@:6}"
 
     echo_status "Computing model ${model} with network ${NETWORK}."
 
@@ -117,17 +118,40 @@ function evaluate_model {
 # prepare file lists and spectrograms
 #####################################
 function stage1_prepare {
-    echo_status "Preparing file lists."
-    mkdir $LISTPATH 2> /dev/null
-
-    "$here/code/create_filelists.py" "$LABELPATH" ${TRAIN} --out "$LISTPATH/%(fold)s_%(num)i" --num ${model_count} --folds "train=$((model_count-1)),val=1" || return $?
-    "$here/code/create_filelists.py" "$LABELPATH" ${TEST} --out "$LISTPATH/%(fold)s" --num ${model_count} --folds "test=1"  || return $?
-
     echo_status "Computing spectrograms."
     mkdir $SPECTPATH 2> /dev/null
     "$here/code/prepare_spectrograms.sh" "${AUDIOPATH}" "${SPECTPATH}" ${SPEC_SR} ${SPEC_FPS} ${SPEC_FFTLEN} ${SPEC_FMIN} ${SPEC_FMAX} ${SPEC_BANDS}
 
     echo_status "Done computing spectrograms."
+
+    clusterfile="${WORKPATH}/clusters-train.h5"
+    if [ ! -f "${clusterfile}" ]; then
+        echo_status "Computing training data clusters."
+        datasets=${TRAIN// /,}
+        dataspects=`for t in $TRAIN; do echo "${SPECTPATH}"/$t/'*.wav.h5'; done`
+        "$here/code/cluster_spects.py" "${dataspects}" --datasets ${datasets} --skipframes=35 --pca=0.95 --clusters=${TRAIN_CLUSTERS} --outfile "${clusterfile}"
+    else
+        echo_status "Using existing predictions ${clusterfile}."
+    fi
+
+    clusterfile="${WORKPATH}/clusters-test.h5"
+    if [ ! -f "${clusterfile}" ]; then
+        echo_status "Computing testing data clusters."
+        datasets=${TEST// /,}
+        dataspects=`for t in $TEST; do echo "${SPECTPATH}"/$t/'*.wav.h5'; done`
+        "$here/code/cluster_spects.py" "${dataspects}" --datasets ${datasets} --skipframes=35 --pca=0.95 --clusters=${TEST_CLUSTERS} --outfile "${clusterfile}"
+    else
+        echo_status "Using existing predictions ${clusterfile}."
+    fi
+
+    echo_status "Preparing file lists."
+    mkdir $LISTPATH 2> /dev/null
+
+    # file list for training set
+    "$here/code/create_filelists.py" "$LABELPATH" ${TRAIN} --out "$LISTPATH/%(fold)s_%(num)i" --num ${model_count} --folds "train=$((model_count-1)),val=1" || return $?
+    
+    # file lists for test set, one per cluster
+    "$here/code/create_filelists.py" "$LABELPATH" ${TEST} --out "$LISTPATH/%(fold)s_%(cluster)i" --num ${model_count} --folds "test=1" --clusterfile "${WORKPATH}/clusters-test.h5" || return $?
 
     email_status "Done with stage1 preparations" "Computed filelists and spectrograms."
 }
@@ -149,14 +173,16 @@ function stage1_train {
     fi
 
     for i in ${idxs}; do
-        model="$WORKPATH/model_first_${i}"
-        if [ ! -f "${model}.h5" ]; then # check for existence
-            echo_status "Training model ${model}."
-            train_model "${model}" "train_${i}" '' ${i} ${cmdargs} || return $?
-            echo_status "Done training model ${model}."
-        else
-            echo_status "Using existing model ${model}."
-        fi
+        for ci in ${TEST_CLUSTERS}; do
+            model="$WORKPATH/model_first_${i}_${ci}"
+            if [ ! -f "${model}.h5" ]; then # check for existence
+                echo_status "Training model ${model}."
+                train_model "${model}" "train_${i}" '' ${ci} ${i} ${cmdargs} || return $?
+                echo_status "Done training model ${model}."
+            else
+                echo_status "Using existing model ${model}."
+            fi
+        done
     done
 }
 
@@ -168,13 +194,15 @@ function stage1_predict {
 
     cmdargs="${@:1}"
     for i in `seq ${model_count}`; do
-        model="$WORKPATH/model_first_${i}"
-        prediction="${model}.prediction"
-        if [ ! -f "${prediction}.h5" ]; then # check for existence
-            evaluate_model "${model}" "test" "${prediction}" ${cmdargs} || return $?
-        else
-            echo_status "Using existing predictions ${prediction}."
-        fi
+        for ci in ${TEST_CLUSTERS}; do
+            model="$WORKPATH/model_first_${i}_${ci}"
+            prediction="${model}.prediction"
+            if [ ! -f "${prediction}.h5" ]; then # check for existence
+                evaluate_model "${model}" "test_${ci}" "${prediction}" ${cmdargs} || return $?
+            else
+                echo_status "Using existing predictions ${prediction}."
+            fi
+        done
     done
 
     # prediction by bagging

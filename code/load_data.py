@@ -8,7 +8,6 @@ import urllib
 import sys
 # local module
 
-
 def loopspec(spec, width, offs=0):
     if not width:
         yield spec
@@ -91,9 +90,17 @@ else:
         denoise = util.getarg(args, 'denoise', False, label=label, dtype=bool)
         denoise_mode = util.getarg(args, 'denoise_mode', 'mean', label=label, dtype=str)
 
+        augment = util.getarg(args, 'augment', True, label=label, dtype=bool)
+
         rng = random.Random(seed if seed >= 0 else None)
         classes = classes.split(',')
-
+        
+        if augment:
+            from augmentation import Augmentation
+            augmentation = Augmentation(args)
+        else:
+            augmentation = None
+            
         # read all available labels
         labels = {}
         for fns in labelfiles.split(','):
@@ -160,6 +167,10 @@ else:
                     inp = inp[low:high]
                     cut_low.append(low)
                     cut_high.append(high)
+                    
+                if augmentation is not None:
+                    # cluster-based augmentation
+                    inp = augmentation(inp, fileid)
             
                 if denoise:
                     # 'denoise' by subtracting the average over time

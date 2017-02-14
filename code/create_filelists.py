@@ -14,10 +14,22 @@ parser.add_argument('--num', type=int, default=1, help='Number of folds (default
 parser.add_argument('--folds', type=str, default='train=0.8,val=0.2', help='Fold names and shares')
 parser.add_argument('--seed', type=int, help='Set random seed (default=%(default)s)')
 parser.add_argument('--log', action='store_true', help='Log to console')
+parser.add_argument('--clusterfile', type=str, default='', help='Cluster file')
 args = parser.parse_args()
 
 if args.seed is not None:
     random.seed(args.seed)
+
+if args.clusterfile:
+    import h5py
+    with h5py.File(args.clusterfile, 'r') as f:
+        cluster_items = f['items'].value
+        cluster_idxs = f['clusters'].value
+        clusters = np.max(clidxs)+1
+else:
+    cluster_items = None
+    cluster_idxs = None
+    clusters = 1
 
 fileids = []
 for filelist in args.filelists:
@@ -47,10 +59,16 @@ for n in range(num):
         folditems = items[start:end]
         start = end
 
-        outname = args.out%dict(fold=name, num=n+1)
-        with open(outname, 'w') as f:
-            f.writelines("%s\n"%f for f in folditems)
+        for cli in range(clusters):
+            if clusters > 1:
+                clitems
+            else:
+                clitems = folditems
+            
+            outname = args.out%dict(fold=name, num=n+1, cluster=cli)
+            with open(outname, 'w') as f:
+                f.writelines("%s\n"%f for f in clitems)
 
-        if args.log:
-            print >>sys.stderr, "Wrote %s_%i with %i files (share=%.3f)"%(name, n+1, len(folditems), len(folditems)/float(len(items)))
+            if args.log:
+                print >>sys.stderr, "Wrote %s_%i_%i with %i files (share=%.3f)"%(name, n+1, cli, len(folditems), len(folditems)/float(len(items)))
 

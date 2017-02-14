@@ -13,6 +13,10 @@ TRAIN="ff1010bird warblrb10k"
 # dataset making up the testing set (only one!)
 TEST=testdata
 
+# number of clusters for train and test data
+TRAIN_CLUSTERS=8
+TEST_CLUSTERS=2
+
 # where to put work data (must be writable)
 WORKPATH="/tmp/bird_workspace/"
 WORKPATH="/media/audiostreams/data/bird-challenge/results/master/"

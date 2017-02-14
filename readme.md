@@ -18,8 +18,9 @@ The implementation is done in the Python programming language using numpy, Thean
 Required software:
 ------------------
 
-Python (version 2.7): https://www.python.org/
+Python (version 2.7): https://www.python.org
 numpy: http://www.numpy.org
+scikit-learn: http://scikit-learn.org
 Theano: https://github.com/Theano/Theano
 lasagne: https://github.com/Lasagne/Lasagne
 simplenn: https://jobim.ofai.at/gitlab/gr/simplenn
