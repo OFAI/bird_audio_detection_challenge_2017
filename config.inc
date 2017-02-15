@@ -18,10 +18,10 @@ TRAIN_CLUSTERS=8
 TEST_CLUSTERS=2
 
 # where to put work data (must be writable)
-WORKPATH="/media/audiostreams/data/bird-challenge/results/augment_clusters/"
+WORKPATH="/media/audiostreams/data/bird-challenge/results/augment_clusters_plus_ori/"
 
 # network configuration to use (network_$NETWORK.inc file)
 NETWORK=final_submission
 
 # email for notification on finished subtasks (if email address is given)
-EMAIL=
+EMAIL=thomas.grill@ofai.at
