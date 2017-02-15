@@ -26,7 +26,7 @@ if args.clusterfile:
     with h5py.File(args.clusterfile, 'r') as f:
         cluster_items = f['items'].value
         cluster_idxs = f['clusters'].value
-        clusters = max(cluster_idxs)+1
+        clusters = max(cluster_idxs)
         cluster_dict = dict(izip(imap(tuple, cluster_items), cluster_idxs))
 else:
     cluster_dict = None

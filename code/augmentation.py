@@ -25,12 +25,12 @@ class Augmentation(object):
         # read source cluster data
         with h5py.File(src_clusters, 'r') as f:
             clusters = f['clusters'].value
-            nclusters = np.max(clusters)+1
+            nclusters = np.max(clusters)
             items = f['items'].value
             # translation dict item -> cluster index
             self.clusterdict = dict(izip(items, clusters))
             # mask for each cluster
-            src_msks = [f['clusters'].value == c for c in range(nclusters)]
+            src_msks = [f['clusters'].value == c for c in range(1, nclusters+1)]
             # means for each cluster
             src_means = [f['mean'][m] for m in src_msks]
             self.src_mean_means = map(np.mean, src_means)
