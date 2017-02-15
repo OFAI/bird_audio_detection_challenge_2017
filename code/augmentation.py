@@ -1,7 +1,7 @@
 import util
 import h5py
 import numpy as np
-from itertools import izip
+from itertools import izip, imap
 
 class Augmentation(object):
     def __init__(self, args={}, label=None):
@@ -31,7 +31,7 @@ class Augmentation(object):
             nclusters = np.max(clusters)
             items = f['items'].value
             # translation dict item -> cluster index
-            self.clusterdict = dict(izip(items, clusters))
+            self.clusterdict = dict(izip(imap(tuple, items), clusters))
             # mask for each cluster
             src_msks = [f['clusters'].value == c for c in range(1, nclusters+1)]
             # means for each cluster
