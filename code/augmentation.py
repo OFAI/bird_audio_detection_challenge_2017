@@ -4,7 +4,7 @@ import numpy as np
 from itertools import izip
 
 class Augmentation(object):
-    def __init__(self, args={}):
+    def __init__(self, args={}, label=None):
         super(Augmentation, self).__init__()
     
         import pdb
