@@ -125,7 +125,7 @@ function evaluate_model {
 function stage1_prepare {
     echo_status "Computing spectrograms."
     mkdir $SPECTPATH 2> /dev/null
-#    "$here/code/prepare_spectrograms.sh" "${AUDIOPATH}" "${SPECTPATH}" ${SPEC_SR} ${SPEC_FPS} ${SPEC_FFTLEN} ${SPEC_FMIN} ${SPEC_FMAX} ${SPEC_BANDS}
+    "$here/code/prepare_spectrograms.sh" "${AUDIOPATH}" "${SPECTPATH}" ${SPEC_SR} ${SPEC_FPS} ${SPEC_FFTLEN} ${SPEC_FMIN} ${SPEC_FMAX} ${SPEC_BANDS}
 
     echo_status "Done computing spectrograms."
 
