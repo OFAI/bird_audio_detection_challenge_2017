@@ -97,7 +97,7 @@ else:
         
         if augment:
             from augmentation import Augmentation
-            augmentation = Augmentation(args, label=None)
+            augmentation = Augmentation(args, label=label)
         else:
             augmentation = None
             
