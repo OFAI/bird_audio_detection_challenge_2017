@@ -67,7 +67,11 @@ class Augmentation(object):
         # compute amount of noise
         amount = (np.exp(dst_p01)-np.exp(src_p01))*self.strength
         # add noise spectrum
-        offs = np.random.randint(0, len(self.linnoise)-len(spec))
+        try:
+            offs = np.random.randint(0, len(self.linnoise)-len(spec))
+        except:
+            print "SPEC", len(spec)
+            raise
         spec += self.linnoise[offs:][:len(spec)]*amount
         
         dst_gain_offs = dst_mean-dst_p01
