@@ -3,6 +3,7 @@
 
 import sys
 import random
+from itertools import izip
 
 import argparse
 parser = argparse.ArgumentParser(description='Create filelists')
@@ -26,9 +27,9 @@ if args.clusterfile:
         cluster_items = f['items'].value
         cluster_idxs = f['clusters'].value
         clusters = max(cluster_idxs)+1
+        cluster_dict = dict(izip(cluster_items, cluster_idxs))
 else:
-    cluster_items = None
-    cluster_idxs = None
+    cluster_dict = None
     clusters = 1
 
 fileids = []
@@ -59,9 +60,12 @@ for n in range(num):
         folditems = items[start:end]
         start = end
 
+        import pdb
+        pdb.set_trace()
+
         for cli in range(clusters):
             if clusters > 1:
-                clitems
+                clitems = [f for f in folditems if cluster_dict[f] == cli]
             else:
                 clitems = folditems
             
