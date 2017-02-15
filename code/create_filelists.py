@@ -25,7 +25,7 @@ if args.clusterfile:
     with h5py.File(args.clusterfile, 'r') as f:
         cluster_items = f['items'].value
         cluster_idxs = f['clusters'].value
-        clusters = np.max(clidxs)+1
+        clusters = max(clidxs)+1
 else:
     cluster_items = None
     cluster_idxs = None
