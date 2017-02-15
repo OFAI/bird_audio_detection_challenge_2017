@@ -108,6 +108,7 @@ function evaluate_model {
     --var input:labels="${LABELPATH}"/'*.csv' \
     --var input:data="${SPECTPATH}/%(id)s.h5" \
     --var input:targets_needed=0 \
+    --var input:augment=0 \
     --var filelist:path="$LISTPATH" \
     --var filelist:lists=$filelists \
     --var filelistshuffle:bypass=1 \
@@ -210,7 +211,7 @@ function stage1_predict {
 
     # prediction by bagging
     echo_status "Bagging first stage predictions."
-    "$here/code/predict.py" "$WORKPATH"/model_first_?.prediction.h5 --filelist "$LABELPATH/$TEST.csv" --filelist-header --out "$first_predictions" --out-header || return $?
+    "$here/code/predict.py" "$WORKPATH"/model_first_?_?.prediction.h5 --filelist "$LABELPATH/$TEST.csv" --filelist-header --out "$first_predictions" --out-header || return $?
     echo_status "Done. First stage predictions are in ${first_predictions}."
 
     email_status "Done with stage1 predictions" "First stage predictions are in ${first_predictions}."
