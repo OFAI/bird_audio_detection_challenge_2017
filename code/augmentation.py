@@ -56,6 +56,9 @@ class Augmentation(object):
     
     
     def __call__(self, spec, item):
+        import pdb
+        pdb.set_trace()
+    
         # get cluster
         cl = self.clusterdict[tuple(item.split('/'))]
         
