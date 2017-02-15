@@ -76,6 +76,11 @@ function train_model {
     --var input:labels="${LABELPATH}"/'*.csv',"${extralabels}" \
     --var input:data="${SPECTPATH}/%(id)s.h5" \
     --var input:data_vars=1k \
+    --var input:noise="${SPECTPATH}/noise/white_noise.wav.h5" \
+    --var input:src_clusters="${WORKPATH}/clusters-train.h5" \
+    --var input:dst_clusters="${WORKPATH}/clusters-test.h5" \
+    --var input:dst_ix=${cluster} \
+    --var input:strength=1 \
     --process collect:collect \
     --var "collect:source=0..1"  \
     --process "scale@1:range(out_min=0.01,out_max=0.99)" \

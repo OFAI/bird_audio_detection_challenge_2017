@@ -7,6 +7,9 @@ class Augmentation(object):
     def __init__(self, args={}):
         super(Augmentation, self).__init__()
     
+        import pdb
+        pdb.set_trace()
+    
         # noise spectrum
         noise_fn = util.getarg(args, 'noise', label=label, dtype=str)
         # source clusters file
