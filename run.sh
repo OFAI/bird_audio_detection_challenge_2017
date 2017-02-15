@@ -263,15 +263,17 @@ function stage2_train {
     fi
 
     for i in $idxs; do
-        for h in $folds; do
-            model="$WORKPATH/model_second_${i}_${h}"
-            if [ ! -f "${model}.h5" ]; then # check for existence
-                echo_status "Training model ${model}."
-                train_model "${model}" "train_${i}_pseudo_${h},val_${i}" "$LISTPATH/testdata.pseudo_*" ${i} ${cmdargs} || return $?
-                echo_status "Done training model ${model}."
-            else
-                echo_status "Using existing model ${model}."
-            fi
+        for ci in `seq ${TEST_CLUSTERS}`; do
+            for h in $folds; do
+                model="$WORKPATH/model_second_${i}_${ci}_${h}"
+                if [ ! -f "${model}.h5" ]; then # check for existence
+                    echo_status "Training model ${model}."
+                    train_model "${model}" "train_${i}_${ci}_pseudo_${h},val_${i}" "$LISTPATH/testdata.pseudo_*" ${ci} ${i} ${cmdargs} || return $?
+                    echo_status "Done training model ${model}."
+                else
+                    echo_status "Using existing model ${model}."
+                fi
+            done
         done
     done
 }
@@ -284,14 +286,16 @@ function stage2_predict {
 
     cmdargs="${@:1}"
     for i in `seq ${model_count}`; do
-        for h in `seq ${pseudo_folds}`; do
-            model="$WORKPATH/model_second_${i}_${h}"
-            prediction="${model}.prediction"
-            if [ ! -f "${prediction}.h5" ]; then # check for existence
-                evaluate_model "${model}" test "${prediction}" ${cmdargs} || return $?
-            else
-                echo_status "Using existing predictions ${prediction}."
-            fi
+        for ci in `seq ${TEST_CLUSTERS}`; do
+            for h in `seq ${pseudo_folds}`; do
+                model="$WORKPATH/model_second_${i}_${ci}_${h}"
+                prediction="${model}.prediction"
+                if [ ! -f "${prediction}.h5" ]; then # check for existence
+                    evaluate_model "${model}" "test_${ci}" "${prediction}" ${cmdargs} || return $?
+                else
+                    echo_status "Using existing predictions ${prediction}."
+                fi
+            done
         done
     done
 
