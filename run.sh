@@ -178,7 +178,7 @@ function stage1_train {
     fi
 
     for i in ${idxs}; do
-        for ci in ${TEST_CLUSTERS}; do
+        for ci in `seq ${TEST_CLUSTERS}`; do
             model="$WORKPATH/model_first_${i}_${ci}"
             if [ ! -f "${model}.h5" ]; then # check for existence
                 echo_status "Training model ${model}."
@@ -199,7 +199,7 @@ function stage1_predict {
 
     cmdargs="${@:1}"
     for i in `seq ${model_count}`; do
-        for ci in ${TEST_CLUSTERS}; do
+        for ci in `seq ${TEST_CLUSTERS}`; do
             model="$WORKPATH/model_first_${i}_${ci}"
             prediction="${model}.prediction"
             if [ ! -f "${prediction}.h5" ]; then # check for existence
