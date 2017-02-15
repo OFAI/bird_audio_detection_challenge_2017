@@ -65,7 +65,7 @@ for n in range(num):
 
         for cli in range(clusters):
             if clusters > 1:
-                clitems = [f for f in folditems if cluster_dict[f.split('/')] == cli]
+                clitems = [f for f in folditems if cluster_dict[tuple(f.split('/'))] == cli]
             else:
                 clitems = folditems
             
