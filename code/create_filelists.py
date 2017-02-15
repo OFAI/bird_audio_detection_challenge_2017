@@ -60,13 +60,13 @@ for n in range(num):
         folditems = items[start:end]
         start = end
 
-        for cli in range(clusters):
+        for cli in range(1,clusters+1):
             if clusters > 1:
                 clitems = [f for f in folditems if cluster_dict[tuple(f.split('/'))] == cli]
             else:
                 clitems = folditems
             
-            outname = args.out%dict(fold=name, num=n+1, cluster=cli+1)
+            outname = args.out%dict(fold=name, num=n+1, cluster=cli)
             with open(outname, 'w') as f:
                 f.writelines("%s\n"%f for f in clitems)
 
