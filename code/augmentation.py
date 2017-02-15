@@ -7,9 +7,6 @@ class Augmentation(object):
     def __init__(self, args={}, label=None):
         super(Augmentation, self).__init__()
     
-        import pdb
-        pdb.set_trace()
-    
         # noise spectrum
         noise_fn = util.getarg(args, 'noise', label=label, dtype=str)
         # source clusters file
@@ -36,23 +33,23 @@ class Augmentation(object):
             src_msks = [f['clusters'].value == c for c in range(1, nclusters+1)]
             # means for each cluster
             src_means = [f['mean'].value[m] for m in src_msks]
-            self.src_mean_means = map(np.mean, src_means)
-            self.src_mean_stds = map(np.std, src_means)
+            self.src_mean_means = [np.mean(x, axis=0) for x in src_means]
+            self.src_mean_stds = [np.std(x, axis=0) for x in src_means]
             # p01s for each cluster
             src_p01s = [f['p01'].value[m] for m in src_msks]
-            self.src_p01_means = map(np.mean, src_p01s)
-            self.src_p01_stds = map(np.std, src_p01s)
+            self.src_p01_means = [np.mean(x, axis=0) for x in src_p01s]
+            self.src_p01_stds = [np.std(x, axis=0) for x in src_p01s]
 
         # read destination cluster data
         # we only need the one specified by dst_ix
         with h5py.File(dst_clusters, 'r') as f:
             dst_mask = f['clusters'].value == dst_ix
             dst_mean = f['mean'].value[dst_mask]
-            self.dst_mean_mean = np.mean(dst_mean)
-            self.dst_mean_std = np.std(dst_mean)
+            self.dst_mean_mean = np.mean(dst_mean, axis=0)
+            self.dst_mean_std = np.std(dst_mean, axis=0)
             dst_p01 = f['p01'].value[dst_mask]
-            self.dst_p01_mean = np.mean(dst_p01)
-            self.dst_p01_std = np.std(dst_p01)
+            self.dst_p01_mean = np.mean(dst_p01, axis=0)
+            self.dst_p01_std = np.std(dst_p01, axis=0)
     
     
     def __call__(self, spec, item):
