@@ -24,6 +24,9 @@ if args.seed is not None:
 if args.clusterfile:
     import h5py
     with h5py.File(args.clusterfile, 'r') as f:
+        import pdb
+        pdb.set_trace()
+
         cluster_items = f['items'].value
         cluster_idxs = f['clusters'].value
         clusters = max(cluster_idxs)+1
@@ -59,9 +62,6 @@ for n in range(num):
         end = int(taken+0.5)
         folditems = items[start:end]
         start = end
-
-        import pdb
-        pdb.set_trace()
 
         for cli in range(clusters):
             if clusters > 1:
