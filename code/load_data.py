@@ -98,8 +98,10 @@ else:
         if augment:
             from augmentation import Augmentation
             augmentation = Augmentation(args, label=label)
+            augvars = (True, False)
         else:
             augmentation = None
+            augvars = (False,)
             
         # read all available labels
         labels = {}
@@ -124,131 +126,133 @@ else:
         # data variations
         data_vars = data_vars.split(',')
 
-        cachemem = {}        
+        cachemem = {}
         for item in data:
-            info = item[-1]
-            fileid = info['id']
-            fileid_noext = os.path.splitext(fileid)[0]       
-            fileid_class = os.path.split(fileid_noext)[0]
+            for augvar in augvars:
+                info = item[-1]
+                fileid = info['id']
+                fileid_noext = os.path.splitext(fileid)[0]
+                fileid_class = os.path.split(fileid_noext)[0]
 
-            # fileid has subpaths
-            fns = [data_path%dict(id=fileid, id_noext=fileid_noext, var=v) for v in data_vars]
+                # fileid has subpaths
+                fns = [data_path%dict(id=fileid, id_noext=fileid_noext, var=v) for v in data_vars]
 
-            samplerate = None
-            inps = []
-            cut_low = []
-            cut_high = []
-            for fn in fns:
-                if not os.path.exists(fn):
-                    raise ValueError("No file found for input path '%s'"%fn)
+                samplerate = None
+                inps = []
+                cut_low = []
+                cut_high = []
+                for fn in fns:
+                    if not os.path.exists(fn):
+                        raise ValueError("No file found for input path '%s'"%fn)
+
+                    try:
+                        inp_data, meta = cachemem[fn]
+                    except KeyError:
+                        try:
+                            inp_data, meta = util.load(fn, args=args, metadata=True, label=label)
+                        except IOError:
+                            print >>sys.stderr, "Input file %s is broken"%fn
+                            raise
+                    if cache:
+                        cachemem[fn] = (inp_data, meta)
+                    logging.debug("Loaded input file '%s': %s'"%(fileid, fn))
+
+                    # target processing
+                    if data_type == 'audio':
+                        samplerate = meta['samplerate']
+                        inp = inp_data
+                    else:
+                        samplerate = 1./np.diff(inp_data['times']).mean()
+                        inp = inp_data['features']
+            
+                    if cut_stddevs > 0:
+                        low,high = process_cut(inp, stddevs=cut_stddevs, ignore=cut_ignore)
+                        inp = inp[low:high]
+                        cut_low.append(low)
+                        cut_high.append(high)
+
+                    if augvar:
+                        # cluster-based augmentation
+                        inp = augmentation(inp, fileid)
+
+                    if denoise:
+                        # 'denoise' by subtracting the average over time
+                        inp = process_denoise(inp, mode=denoise_mode)
+                
+                    inps.append(inp)
+
+                if cut_high:
+                    low_max = max(cut_low)
+                    high_min = min(cut_high)
+                    inps = [inp[low_max-low:high_min-high or None] for inp,low,high in zip(inps,cut_low,cut_high)]
+       
+                # time must be first axis
+                inps = np.asarray(inps).swapaxes(0,1)
+
+                if downmix:
+                    # mix down channels but keep dimensionality
+                    inps = inps.mean(axis=-1)[...,np.newaxis]
+
+            
+                samples = len(inps)
+            
+                # pad by given pad lengths 
+                inps_len = samples+pad_front+pad_back
+                # and additionally by rounding up length to 'multiple' param
+                pad_multiple = int(np.ceil(float(inps_len)/multiple))*multiple-inps_len
+    
+                if meta is None:
+                    meta = dict()
+    
+                meta['pad_front'] = pad_front
+                meta['pad_back'] = pad_back+pad_multiple
+                meta['frames'] = samples
+                meta['framerate'] = samplerate
+                meta['augmentation'] = augvar
+    
+                if pad_front+pad_back+pad_multiple:
+                    if pad_mode == 'zero':
+                        pad_data_front = np.zeros((pad_front,)+inps.shape[1:], dtype=inps.dtype)
+                        pad_data_back = np.zeros((pad_back+pad_multiple,)+inps.shape[1:], dtype=inps.dtype)
+                    elif pad_mode == 'copy':
+                        pad_data_front = np.repeat(inps[:1], repeats=pad_front, axis=0)
+                        pad_data_back = np.repeat(inps[-1:], repeats=pad_back+pad_multiple, axis=0)
+                    else:
+                        raise ValueError("Pad mode '%s' unknown"%pad_mode)
+        
+                    inps = np.concatenate((pad_data_front, inps, pad_data_back), axis=0)
 
                 try:
-                    inp_data, meta = cachemem[fn]
+                    tgt = labels[fileid_noext]
                 except KeyError:
-                    try:
-                        inp_data, meta = util.load(fn, args=args, metadata=True, label=label)
-                    except IOError:
-                        print >>sys.stderr, "Input file %s is broken"%fn
+                    if targets_needed:
+                        logging.error("File ID '%s' not found in labels"%fileid_noext)
                         raise
-                if cache:
-                    cachemem[fn] = (inp_data, meta)
-                logging.debug("Loaded input file '%s': %s'"%(fileid, fn))
+                    else:
+                        tgt = 0.
 
-                # target processing
-                if data_type == 'audio':
-                    samplerate = meta['samplerate']
-                    inp = inp_data
+                if useclasses:
+                    clss = classes.index(fileid_class)
+                    outp = np.asarray((tgt,clss), dtype=bool)
                 else:
-                    samplerate = 1./np.diff(inp_data['times']).mean()
-                    inp = inp_data['features']
-            
-                if cut_stddevs > 0:
-                    low,high = process_cut(inp, stddevs=cut_stddevs, ignore=cut_ignore)
-                    inp = inp[low:high]
-                    cut_low.append(low)
-                    cut_high.append(high)
-                    
-                if augmentation is not None:
-                    # cluster-based augmentation
-                    inp = augmentation(inp, fileid)
-            
-                if denoise:
-                    # 'denoise' by subtracting the average over time
-                    inp = process_denoise(inp, mode=denoise_mode)
-                
-                inps.append(inp)
+                    outp = np.asarray((tgt,), dtype=np.float32)
 
-            if cut_high:
-                low_max = max(cut_low)
-                high_min = min(cut_high)
-                inps = [inp[low_max-low:high_min-high or None] for inp,low,high in zip(inps,cut_low,cut_high)]
-       
-            # time must be first axis
-            inps = np.asarray(inps).swapaxes(0,1)
-
-            if downmix:
-                # mix down channels but keep dimensionality
-                inps = inps.mean(axis=-1)[...,np.newaxis]
-
-            
-            samples = len(inps)
-            
-            # pad by given pad lengths 
-            inps_len = samples+pad_front+pad_back
-            # and additionally by rounding up length to 'multiple' param
-            pad_multiple = int(np.ceil(float(inps_len)/multiple))*multiple-inps_len
-    
-            if meta is None:
-                meta = dict()
-    
-            meta['pad_front'] = pad_front
-            meta['pad_back'] = pad_back+pad_multiple
-            meta['frames'] = samples
-            meta['framerate'] = samplerate
-    
-            if pad_front+pad_back+pad_multiple:
-                if pad_mode == 'zero':
-                    pad_data_front = np.zeros((pad_front,)+inps.shape[1:], dtype=inps.dtype)
-                    pad_data_back = np.zeros((pad_back+pad_multiple,)+inps.shape[1:], dtype=inps.dtype)
-                elif pad_mode == 'copy':
-                    pad_data_front = np.repeat(inps[:1], repeats=pad_front, axis=0)
-                    pad_data_back = np.repeat(inps[-1:], repeats=pad_back+pad_multiple, axis=0)
+                if useweights:
+                    w = np.ones(outp.shape, dtype=np.float32)
+                    weights = [w]
                 else:
-                    raise ValueError("Pad mode '%s' unknown"%pad_mode)
-        
-                inps = np.concatenate((pad_data_front, inps, pad_data_back), axis=0)
+                    weights = []
 
-            try:
-                tgt = labels[fileid_noext]
-            except KeyError:
-                if targets_needed:
-                    logging.error("File ID '%s' not found in labels"%fileid_noext)
-                    raise
-                else:
-                    tgt = 0.
+                # update meta information
+                info.update(dict(fns=fns))
 
-            if useclasses:
-                clss = classes.index(fileid_class)
-                outp = np.asarray((tgt,clss), dtype=bool)
-            else:
-                outp = np.asarray((tgt,), dtype=np.float32)
+                for variation in xrange(cycle or 1):
+                    offs = offset+(rng.randint(1, len(inps)-1) if variation else 0)
+                    for vinps in loopspec(inps, width, offs):
+                        # augment using equalization and colored noise
+                        if eqgain:
+                            # use a sine curve with random phase and eqgain amplitude to modulate the spectrum
+                            eq = np.sin((np.arange(vinps.shape[1],dtype=np.float32)/vinps.shape[1]+rng.random())*np.pi*2)*(eqgain*0.5)
+                            vinps = vinps+eq
 
-            if useweights:
-                w = np.ones(outp.shape, dtype=np.float32)
-                weights = [w]
-            else:
-                weights = []
-
-            # update meta information
-            info.update(dict(fns=fns))
-
-            for variation in xrange(cycle or 1):
-                offs = offset+(rng.randint(1, len(inps)-1) if variation else 0)
-                for vinps in loopspec(inps, width, offs):
-                    # augment using equalization and colored noise
-                    if eqgain:
-                        # use a sine curve with random phase and eqgain amplitude to modulate the spectrum
-                        eq = np.sin((np.arange(vinps.shape[1],dtype=np.float32)/vinps.shape[1]+rng.random())*np.pi*2)*(eqgain*0.5)
-                        vinps = vinps+eq
-
-                    yield tuple([inp for inp in vinps.swapaxes(0,1)]+[outp] + weights + [info])
+                        yield tuple([inp for inp in vinps.swapaxes(0,1)]+[outp] + weights + [info])
