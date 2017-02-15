@@ -3,7 +3,7 @@
 
 import sys
 import random
-from itertools import izip
+from itertools import izip, imap
 
 import argparse
 parser = argparse.ArgumentParser(description='Create filelists')
@@ -30,7 +30,7 @@ if args.clusterfile:
         cluster_items = f['items'].value
         cluster_idxs = f['clusters'].value
         clusters = max(cluster_idxs)+1
-        cluster_dict = dict(izip(cluster_items, cluster_idxs))
+        cluster_dict = dict(izip(imap(tuple, cluster_items), cluster_idxs))
 else:
     cluster_dict = None
     clusters = 1
