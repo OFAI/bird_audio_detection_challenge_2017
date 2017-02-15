@@ -96,4 +96,4 @@ if __name__ == '__main__':
         outf['std'] = allstd[ds_idxs]        
         outf['p01'] = allp01[ds_idxs]
         outf['p99'] = allp99[ds_idxs]        
-        outf['clusters'] = clidxs
+        outf['clusters'] = clidxs+1

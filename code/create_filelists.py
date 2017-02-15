@@ -69,7 +69,7 @@ for n in range(num):
             else:
                 clitems = folditems
             
-            outname = args.out%dict(fold=name, num=n+1, cluster=cli)
+            outname = args.out%dict(fold=name, num=n+1, cluster=cli+1)
             with open(outname, 'w') as f:
                 f.writelines("%s\n"%f for f in clitems)
 
