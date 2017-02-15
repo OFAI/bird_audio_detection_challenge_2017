@@ -32,7 +32,7 @@ class Augmentation(object):
             items = f['items'].value
             # translation dict item -> cluster index
             self.clusterdict = dict(izip(imap(tuple, items), clusters))
-            # mask for each cluster
+            # mask for each cluster (1-based cluster index)
             src_msks = [f['clusters'].value == c for c in range(1, nclusters+1)]
             # means for each cluster
             src_means = [f['mean'].value[m] for m in src_msks]
@@ -59,11 +59,11 @@ class Augmentation(object):
         import pdb
         pdb.set_trace()
     
-        # get cluster
+        # get cluster (1-based)
         cl = self.clusterdict[tuple(item.split('/'))]
         
-        src_mean = self.src_mean_means[cl]
-        src_p01 = self.src_p01_means[cl]
+        src_mean = self.src_mean_means[cl-1]
+        src_p01 = self.src_p01_means[cl-1]
         dst_mean = self.dst_mean_mean
         dst_p01 = self.dst_p01_mean
         
