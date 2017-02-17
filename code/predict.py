@@ -18,6 +18,7 @@ parser.add_argument("--out", type=str, help="out file (default=stdout)")
 parser.add_argument("--out-prefix", type=str, default='', help="out item prefix (default='%(default)s')")
 parser.add_argument("--out-suffix", type=str, default='', help="out item suffix (default='%(default)s')")
 parser.add_argument("--out-header", action='store_true', help="write eventual filelist header")
+parser.add_argument("--skip-not-found", action='store_true', help="Skip files with missing predictions")
 args = parser.parse_args()
     
 facc = np.__dict__[args.acc]
@@ -55,20 +56,26 @@ if args.filelist:
     else:
         fout = sys.stdout
     
-    with open(args.filelist, 'r') as flist:
-        for lni,ln in enumerate(flist):
-            if lni == 0 and args.filelist_header:
-                if args.out_header:
-                    print >>fout, ln.strip() # replicate header line
-            else:
-                fid = ln.split(',')[0] # first column only
-                try:
-                    pred = results[fid]
-                except KeyError:
-                    print >>sys.stderr, "Prediction not found for %s, exiting" % fid
-                    exit(-1)
-                if pred <= args.threshold or pred >= 1.-args.threshold:
-                    print >>fout, "%s%s%s,%.6f" % (args.out_prefix, fid, args.out_suffix, pred)
+    for fn in args.filelist.split(','):
+        with open(fn, 'r') as flist:
+            for lni,ln in enumerate(flist):
+                if lni == 0 and args.filelist_header:
+                    if args.out_header:
+                        print >>fout, ln.strip() # replicate header line
+                else:
+                    fid = ln.strip().split(',')[0].strip() # first column only
+                    try:
+                        pred = results[fid]
+                    except KeyError:
+                        print >>sys.stderr, "Prediction not found for %s," % fid
+                        if args.skip_not_found:
+                            print >>sys.stderr, "skipping."
+                            continue
+                        else:
+                            print >>sys.stderr, "exiting."
+                            exit(-1)
+                    if pred <= args.threshold or pred >= 1.-args.threshold:
+                        print >>fout, "%s%s%s,%.6f" % (args.out_prefix, fid, args.out_suffix, pred)
 
     if args.out:
         fout.close()
