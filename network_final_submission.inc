@@ -7,17 +7,15 @@ model_count=5
 # length of spectrogram slice (must correspond to architecture below)
 net_width=1000
 
-# network layers
-cnvmult=16
 nl=leaky_rectify
 # augmentation
 featpart="augment:Rotation|augment:Shift(low=-1,high=1,axis=3)"
 # normalization
 normpart="normalize:BatchNorm(axes=0x1x2,alpha=0.1,beta=None,gamma=None)"  # normalize over all except frequency axis
 # convolutional layers
-convpart="Conv2D(${cnvmult}x3x3)|${nl}|Pool2D(3x3)|Conv2D(${cnvmult}x3x3)|${nl}|Pool2D(3x3)|Conv2D(${cnvmult}x3x1)|${nl}|Pool2D(3x1)|Conv2D(${cnvmult}x3x1)|${nl}|Pool2D(3x1)"
+convpart="Conv2D(32x3x3)|${nl}|Pool2D(3x3)|Conv2D(32x3x3)|${nl}|Pool2D(3x3)|Conv2D(64x3x1)|${nl}|Pool2D(3x1)|Conv2D(64x3x1)|${nl}|Pool2D(3x1)"
 # dense layers
-densepart="Dropout(p=0.5)|Dense(256)|${nl}|Dropout(p=0.5)|Dense(32)|${nl}|Dropout(p=0.5)|Dense(1)|output:sigmoid"
+densepart="Dropout(p=0.5)|Dense(64)|${nl}|Dropout(p=0.5)|Dense(32)|${nl}|Dropout(p=0.5)|Dense(1)|output:sigmoid"
 # all together
 net_layers="${featpart}|${normpart}|${convpart}|${densepart}"
 

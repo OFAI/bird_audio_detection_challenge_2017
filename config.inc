@@ -18,7 +18,7 @@ TRAIN_CLUSTERS=8
 TEST_CLUSTERS=2
 
 # where to put work data (must be writable)
-WORKPATH="/media/audiostreams/data/bird-challenge/results/augment_clusters_plus_ori/"
+WORKPATH="/media/audiostreams/data/bird-challenge/results/augment_clusters_plus_ori_larger/"
 
 # network configuration to use (network_$NETWORK.inc file)
 NETWORK=final_submission
