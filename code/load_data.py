@@ -27,21 +27,6 @@ def loopspec(spec, width, offs=0):
                 yield spec[offs+o:offs+o+width]
 
 
-def process_cut(spect, stddevs=3, ignore=2):
-    from scipy.ndimage.filters import maximum_filter1d
-    # "loudness" curve
-    loud = np.log(np.sum(np.exp(spect), axis=1))
-    # normieren
-    nloud = (loud-np.mean(loud))/np.std(loud)
-    lowloud = nloud < -stddevs
-    # schauen, ob innerhalb von 3 stddevs, Klicks darin (bis zu 2 Frames lang) ignorieren.
-    fltloud = ~maximum_filter1d(lowloud, ignore+1)
-    where_ok = np.where(fltloud)[0]
-    cut_front = np.min(where_ok)
-    cut_back = np.max(where_ok)
-    return cut_front,cut_back+1
-
-
 def process_denoise(spect, mode='mean'):
     if mode == 'mean':
         corr = np.mean(spect, axis=0)
@@ -85,8 +70,7 @@ else:
         useclasses = util.getarg(args, 'useclasses', False, label=label, dtype=bool)
         classes = util.getarg(args, 'classes', '', label=label, dtype=str)
     
-        cut_stddevs = util.getarg(args, 'cut_stddevs', 0, label=label, dtype=float)
-        cut_ignore = util.getarg(args, 'cut_ignore', 4, label=label, dtype=int)
+        cut_edge = util.getarg(args, 'cut_edge', 10, label=label, dtype=int)
         
         denoise = util.getarg(args, 'denoise', False, label=label, dtype=bool)
         denoise_mode = util.getarg(args, 'denoise_mode', 'mean', label=label, dtype=str)
@@ -155,11 +139,11 @@ else:
                     samplerate = 1./np.diff(inp_data['times']).mean()
                     inp = inp_data['features']
             
-                if cut_stddevs > 0:
-                    low,high = process_cut(inp, stddevs=cut_stddevs, ignore=cut_ignore)
-                    inp = inp[low:high]
-                    cut_low.append(low)
-                    cut_high.append(high)
+                low = min(cut_edge, len(inp)-1) 
+                high = max(len(inp)-cut_edge, low+1)
+                inp = inp[low:high]
+                cut_low.append(low)
+                cut_high.append(high)
             
                 if denoise:
                     # 'denoise' by subtracting the average over time
