@@ -153,7 +153,7 @@ function stage1_prepare {
 
     # file list for training set
     "$here/code/create_filelists.py" "$LABELPATH" ${TRAIN} --out "$LISTPATH/%(fold)s_%(num)i" --num ${model_count} --folds "train=$((model_count-1)),val=1" || return $?
-    
+
     # file lists for test set, one per cluster
     "$here/code/create_filelists.py" "$LABELPATH" ${TEST} --out "$LISTPATH/%(fold)s_%(cluster)i" --num ${model_count} --folds "test=1" --clusterfile "${WORKPATH}/clusters-test.h5" || return $?
 
@@ -241,7 +241,7 @@ function stage1_validate {
     # prediction by bagging
     echo_status "Bagging first stage validations."
     vallists=`echo $LISTPATH/val_?`
-    "$here/code/predict.py" "$WORKPATH"/model_first_?_?.validation.h5 --filelist ${vallists// /,} --out "$first_validations" --keep-prefix --keep-suffix --out-header || return $?
+    "$here/code/predict.py" "$WORKPATH"/model_first_?_?.validation.h5 --filelist ${vallists// /,} --out "$first_validations" --keep-prefix --keep-suffix --out-header --skip-missing|| return $?
     filelists=""
     for t in ${TRAIN}; do
         filelists+=" ${LABELPATH}/${t}.csv"
