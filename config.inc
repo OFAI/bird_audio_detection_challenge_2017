@@ -14,7 +14,7 @@ TRAIN="ff1010bird warblrb10k"
 TEST=testdata
 
 # where to put work data (must be writable)
-WORKPATH="/media/audiostreams/data/bird-challenge/results/full_sr/"
+WORKPATH="/media/audiostreams/data/bird-challenge/results/full_sr_aug_offset/"
 
 # network configuration to use (network_$NETWORK.inc file)
 NETWORK=final_submission
