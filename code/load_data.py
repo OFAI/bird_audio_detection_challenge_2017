@@ -179,7 +179,6 @@ else:
                 # mix down channels but keep dimensionality
                 inps = inps.mean(axis=-1)[...,np.newaxis]
 
-            
             samples = len(inps)
             
             # pad by given pad lengths 
@@ -208,19 +207,20 @@ else:
                 inps = np.concatenate((pad_data_front, inps, pad_data_back), axis=0)
 
             try:
-                tgt = labels[fileid_noext]
+                tgt = bool(labels[fileid_noext])
             except KeyError:
                 if targets_needed:
                     logging.error("File ID '%s' not found in labels"%fileid_noext)
                     raise
                 else:
-                    tgt = 0.
+                    tgt = False
 
             if useclasses:
                 clss = classes.index(fileid_class)
-                outp = np.asarray((tgt,clss), dtype=bool)
+                raise NotImplementedError()
             else:
-                outp = np.asarray((tgt,), dtype=np.float32)
+                outp = np.zeros(1, dtype=int)
+                outp[0] = int(tgt)
 
             if useweights:
                 w = np.ones(outp.shape, dtype=np.float32)
