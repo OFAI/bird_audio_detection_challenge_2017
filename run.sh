@@ -63,8 +63,6 @@ function train_model {
 
     "$here/code/simplenn_main.py" \
     --mode=train \
-    --problem=binary \
-    --var measures= \
     --inputs filelist:filelist \
     --var filelist:path="$LISTPATH" \
     --var filelist:lists="${filelists}" \
@@ -129,38 +127,6 @@ function stage1_prepare {
 
     echo_status "Done computing spectrograms."
 
-<<<<<<< HEAD
-=======
-    clusterfile="${WORKPATH}/clusters-train.h5"
-    if [ ! -f "${clusterfile}" ]; then
-        echo_status "Computing training data clusters."
-        datasets=${TRAIN// /,}
-        dataspects=`for t in $TRAIN; do echo "${SPECTPATH}"/$t/'*.wav.h5'; done`
-        "$here/code/cluster_spects.py" ${dataspects} --datasets ${datasets} --skipframes=35 --pca=0.95 --clusters=${TRAIN_CLUSTERS} --outfile "${clusterfile}"
-    else
-        echo_status "Using existing predictions ${clusterfile}."
-    fi
-
-    clusterfile="${WORKPATH}/clusters-test.h5"
-    if [ ! -f "${clusterfile}" ]; then
-        echo_status "Computing testing data clusters."
-        datasets=${TEST// /,}
-        dataspects=`for t in $TEST; do echo "${SPECTPATH}"/$t/'*.wav.h5'; done`
-        "$here/code/cluster_spects.py" ${dataspects} --datasets ${datasets} --skipframes=35 --pca=0.95 --clusters=${TEST_CLUSTERS} --outfile "${clusterfile}"
-    else
-        echo_status "Using existing predictions ${clusterfile}."
-    fi
-
-    echo_status "Preparing file lists."
-    mkdir $LISTPATH 2> /dev/null
-
-    # file list for training set
-    "$here/code/create_filelists.py" "$LABELPATH" ${TRAIN} --out "$LISTPATH/%(fold)s_%(num)i" --num ${model_count} --folds "train=$((model_count-1)),val=1" || return $?
-
-    # file lists for test set, one per cluster
-    "$here/code/create_filelists.py" "$LABELPATH" ${TEST} --out "$LISTPATH/%(fold)s_%(cluster)i" --num ${model_count} --folds "test=1" --clusterfile "${WORKPATH}/clusters-test.h5" || return $?
-
->>>>>>> 364f399... Updated validation
     email_status "Done with stage1 preparations" "Computed filelists and spectrograms."
 }
 
@@ -184,7 +150,7 @@ function stage1_train {
         model="$WORKPATH/model_first_${i}"
         if [ ! -f "${model}.h5" ]; then # check for existence
             echo_status "Training model ${model}."
-            train_model "${model}" "train_${i}" '' ${i} ${cmdargs} || return $?
+            train_model "${model}" "train_${i},val_${i}" '' ${i} ${cmdargs} || return $?
             echo_status "Done training model ${model}."
         else
             echo_status "Using existing model ${model}."
@@ -300,7 +266,7 @@ function stage2_train {
             model="$WORKPATH/model_second_${i}_${h}"
             if [ ! -f "${model}.h5" ]; then # check for existence
                 echo_status "Training model ${model}."
-                train_model "${model}" "train_${i}_pseudo_${h}" "$LISTPATH/testdata.pseudo_*" ${i} ${cmdargs} || return $?
+                train_model "${model}" "train_${i}_pseudo_${h},val_${i}" "$LISTPATH/testdata.pseudo_*" ${i} ${cmdargs} || return $?
                 echo_status "Done training model ${model}."
             else
                 echo_status "Using existing model ${model}."
