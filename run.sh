@@ -63,8 +63,6 @@ function train_model {
 
     "$here/code/simplenn_main.py" \
     --mode=train \
-    --problem=binary \
-    --var measures= \
     --inputs filelist:filelist \
     --var filelist:path="$LISTPATH" \
     --var filelist:lists="${filelists}" \
@@ -75,6 +73,7 @@ function train_model {
     --var input:labels="${LABELPATH}"/'*.csv',"${extralabels}" \
     --var input:data="${SPECTPATH}/%(id)s.h5" \
     --var input:data_vars=1k \
+    --var input:cut_edge=3 \
     --process collect:collect \
     --var "collect:source=0..1"  \
     --process "scale@1:range(out_min=0.01,out_max=0.99)" \
@@ -152,7 +151,7 @@ function stage1_train {
         model="$WORKPATH/model_first_${i}"
         if [ ! -f "${model}.h5" ]; then # check for existence
             echo_status "Training model ${model}."
-            train_model "${model}" "train_${i}" '' ${i} ${cmdargs} || return $?
+            train_model "${model}" "train_${i},val_${i}" '' ${i} ${cmdargs} || return $?
             echo_status "Done training model ${model}."
         else
             echo_status "Using existing model ${model}."
@@ -268,7 +267,7 @@ function stage2_train {
             model="$WORKPATH/model_second_${i}_${h}"
             if [ ! -f "${model}.h5" ]; then # check for existence
                 echo_status "Training model ${model}."
-                train_model "${model}" "train_${i}_pseudo_${h}" "$LISTPATH/testdata.pseudo_*" ${i} ${cmdargs} || return $?
+                train_model "${model}" "train_${i}_pseudo_${h},val_${i}" "$LISTPATH/testdata.pseudo_*" ${i} ${cmdargs} || return $?
                 echo_status "Done training model ${model}."
             else
                 echo_status "Using existing model ${model}."

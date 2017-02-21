@@ -70,7 +70,7 @@ else:
         useclasses = util.getarg(args, 'useclasses', False, label=label, dtype=bool)
         classes = util.getarg(args, 'classes', '', label=label, dtype=str)
     
-        cut_edge = util.getarg(args, 'cut_edge', 10, label=label, dtype=int)
+        cut_edge = util.getarg(args, 'cut_edge', 0, label=label, dtype=int)
         
         denoise = util.getarg(args, 'denoise', False, label=label, dtype=bool)
         denoise_mode = util.getarg(args, 'denoise_mode', 'mean', label=label, dtype=str)
