@@ -8,6 +8,7 @@ import urllib
 import sys
 # local module
 
+attenuation = np.asarray((0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.002,-0.005,-0.012,-0.025,-0.047,-0.084,-0.143,-0.221,-0.337,-0.498,-0.713,-0.988,-1.328,-1.712,-2.140,-2.610), dtype=np.float32)
 
 def loopspec(spec, width, offs=0):
     if not width:
@@ -85,9 +86,6 @@ else:
         useclasses = util.getarg(args, 'useclasses', False, label=label, dtype=bool)
         classes = util.getarg(args, 'classes', '', label=label, dtype=str)
     
-        cut_stddevs = util.getarg(args, 'cut_stddevs', 0, label=label, dtype=float)
-        cut_ignore = util.getarg(args, 'cut_ignore', 4, label=label, dtype=int)
-        
         denoise = util.getarg(args, 'denoise', False, label=label, dtype=bool)
         denoise_mode = util.getarg(args, 'denoise_mode', 'mean', label=label, dtype=str)
 
@@ -129,8 +127,6 @@ else:
 
             samplerate = None
             inps = []
-            cut_low = []
-            cut_high = []
             for fn in fns:
                 if not os.path.exists(fn):
                     raise ValueError("No file found for input path '%s'"%fn)
@@ -154,25 +150,17 @@ else:
                 else:
                     samplerate = 1./np.diff(inp_data['times']).mean()
                     inp = inp_data['features']
-            
-                if cut_stddevs > 0:
-                    low,high = process_cut(inp, stddevs=cut_stddevs, ignore=cut_ignore)
-                    inp = inp[low:high]
-                    cut_low.append(low)
-                    cut_high.append(high)
-            
+
+                # subtract attenuation on all but the first and last frame
+                inp[1:-1] += attenuation
+
                 if denoise:
                     # 'denoise' by subtracting the average over time
                     inp = process_denoise(inp, mode=denoise_mode)
                 
                 inps.append(inp)
 
-            if cut_high:
-                low_max = max(cut_low)
-                high_min = min(cut_high)
-                inps = [inp[low_max-low:high_min-high or None] for inp,low,high in zip(inps,cut_low,cut_high)]
-       
-            # time must be first axis
+            # time must be first axis, then layers
             inps = np.asarray(inps).swapaxes(0,1)
 
             if downmix:
