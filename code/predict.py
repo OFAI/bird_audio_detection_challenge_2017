@@ -29,10 +29,20 @@ for fn in args.filenames:
     with h5py.File(fn, 'r') as f5:
         print >>sys.stderr, "Reading", fn
         ids = f5['ids']['id'].value
-        if resids is None:
-            resids = sorted(list(set(ids)))
-        else:
-            assert set(resids) == set(ids)
+        results = f5['results'][:,-1] # either scalar probability or two-element softmax output
+        assert len(ids) == len(results)
+        for i, r in izip(ids, results):
+            resf[i].append(r)
+    # accumulate over file and add to total
+    for i,r in resf.iteritems():
+        if len(r) != 1:
+            print >>sys.stderr, "%s: id=%s, %i times"%(fn,i,len(r))
+        res[i].append(facc_id(r))
+
+# sort ids        
+resids = sorted(res.keys())
+# calculate bagged results for each id
+mns = np.asarray([facc(res[i], axis=0) for i in resids])
 
 prefun = (lambda fn:fn) if args.keep_prefix else (lambda fn: os.path.split(fn)[-1])
 suffun = (lambda fn:fn) if args.keep_suffix else (lambda fn: os.path.splitext(fn)[0])
