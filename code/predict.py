@@ -3,6 +3,8 @@ import numpy as np
 import h5py
 import os
 import sys
+from collections import defaultdict
+from itertools import izip
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -26,6 +28,7 @@ facc_id = np.__dict__[args.acc_id]
 
 res = defaultdict(list) # total results
 for fn in args.filenames:
+    resf = defaultdict(list) # per file
     with h5py.File(fn, 'r') as f5:
         print >>sys.stderr, "Reading", fn
         ids = f5['ids']['id'].value
